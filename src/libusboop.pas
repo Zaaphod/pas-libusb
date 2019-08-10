@@ -181,6 +181,35 @@ Type
 
   TLibUsbTransfer = class;
 
+  { TUSBPseudoHIDInterface }
+
+  PHIDReport = ^THIDReport;
+  THIDReport = record
+    ReportID : Byte;
+    Data : Array[0..0] of Byte;
+  End;
+
+  TIntrReportFunc = Function(Report:PHIDReport) : Boolean of object;  // return true if report was consumed
+
+  TUSBPseudoHIDInterface = class(TUSBInterface)
+  private
+    FIntrReports  : TThreadList;
+    FOnIntrReport : TIntrReportFunc;
+  protected
+    FIntrEndpoint : TUSBInterruptInEndpoint;
+    Function SetReport(ReportType, ReportID: Byte; const Buf; Length: LongInt): LongInt;
+    Function GetReport(ReportType, ReportID: Byte; var Buf; Length: LongInt): LongInt;
+  public
+    Constructor Create(ADevice:TUSBDevice;AIntf:PUSBInterfaceDescriptor=Nil);
+    Destructor  Destroy; override;
+    Function SetOutputReport(ReportID:Byte;Const Buf;Length:LongInt) : LongInt;
+    Function InterruptRead: Integer;
+    Function HasReport(ReportID:Byte) : PHIDReport;
+    Procedure EatReport(Report: PHIDReport);
+    Function GetReport(ReportID:Byte) : PHIDReport;
+    property OnIntrReport : TIntrReportFunc read FOnIntrReport write FOnIntrReport;
+  End;
+
   { TLibUsbEndpoint }
 
   TLibUsbEndpoint = class
@@ -1107,6 +1136,137 @@ End;
 Procedure TLibUsbInterface.AttachKernelDriver;
 Begin
   ELibUsb.Check(libusb_attach_kernel_driver(FDevice.FHandle,FIntfNum),'AttachKernelDriver');
+End;
+
+{ TUSBPseudoHIDInterface }
+
+Constructor TUSBPseudoHIDInterface.Create(ADevice:TUSBDevice;AIntf:PUSBInterfaceDescriptor);
+Var E : Integer;
+    EP   : USBEndpointDescriptor;
+Begin
+  inherited Create(ADevice,AIntf);
+
+  { search Interrupt IN endpoint }
+  For E := 0 to FInterface^.bNumEndpoints-1 do
+    Begin
+      EP := FInterface^.Endpoint^[E];
+      if (EP.bmAttributes and USB_ENDPOINT_TYPE_MASK = USB_ENDPOINT_TYPE_INTERRUPT) and
+         (EP.bEndpointAddress and USB_ENDPOINT_DIR_MASK <> 0) then
+        Begin
+          FIntrEndpoint := TUSBInterruptInEndpoint.Create(Self,@(FInterface^.Endpoint^[E]));
+          break;
+        End;
+    End;
+
+  if not assigned(FIntrEndpoint) then
+    raise EUSBError.Create('ERROR: Couldn''t find interrupt endpoint');
+
+  { create list for received reports }
+  FIntrReports  := TThreadList.Create;
+End;
+
+Destructor TUSBPseudoHIDInterface.Destroy;
+Var List : TList;
+    I    : Integer;
+Begin
+  { free unused reports }
+  List := FIntrReports.LockList;
+    For I := 0 to List.Count-1 do
+      FreeMem(PHIDReport(List[I]));
+  FIntrReports.UnlockList;
+  { free objects }
+  FIntrReports.Free;
+  FIntrEndpoint.Free;
+  Inherited Destroy;
+End;
+
+(**
+ * Set Report
+ *
+ * Sends Lenght+1 bytes as USB Control Message
+ *)
+Function TUSBPseudoHIDInterface.SetReport(ReportType, ReportID: Byte; const Buf; Length: LongInt): LongInt;
+Var Data : PByteArray;
+Begin
+  GetMem(Data,Length+1);
+  Data^[0] := ReportID;
+  Move(Buf,Data^[1],Length);
+  Result := FDevice.FControl.ControlMsg(
+    USB_ENDPOINT_OUT or USB_TYPE_CLASS or USB_RECIP_INTERFACE { bmRequestType },
+    USB_REQ_HID_SET_REPORT {bRequest},
+    ReportType shl 8 or ReportID,   { wValue }
+    0,   { wIndex }
+    Data^,
+    Length+1,
+    100);
+  FreeMem(Data);
+End;
+
+(**
+ * Get Report
+ *
+ * Receives at most Lenght bytes as USB Control Message
+ *)
+Function TUSBPseudoHIDInterface.GetReport(ReportType, ReportID: Byte; var Buf; Length: LongInt): LongInt;
+Begin
+  Result := FDevice.FControl.ControlMsg(
+    USB_ENDPOINT_IN or USB_TYPE_CLASS or USB_RECIP_INTERFACE { bmRequestType },
+    USB_REQ_HID_GET_REPORT {bRequest},
+    ReportType shl 8 or ReportID,   { wValue }
+    0,   { wIndex }
+    Buf,
+    Length,
+    100);
+End;
+
+Function TUSBPseudoHIDInterface.SetOutputReport(ReportID: Byte; const Buf; Length: LongInt): LongInt;
+Begin
+  Result := SetReport(HID_REPORT_TYPE_OUTPUT,ReportID,Buf,Length);
+End;
+
+Function TUSBPseudoHIDInterface.InterruptRead : Integer;
+Const BufSize = 64;
+Var Buf : Array[0..BufSize-1] of Byte;
+    Report : PHIDReport;
+Begin
+  Result := FIntrEndpoint.Recv(Buf,BufSize,100);
+  if Result <= 0 then
+    Begin
+//      WriteLn('usb_interrupt_read: ',Result,', usb_error_errno = ',usb_error_errno,', usb_error_str = ',usb_error_str);
+      Exit;
+    End;
+//WriteLn('usb_interrupt_read: ',Result);
+  GetMem(Report,Result);
+  Move(Buf,Report^,Result);
+  if (FOnIntrReport = Nil) or (FOnIntrReport(Report) = False) then  // we trust on logic optimization
+    FIntrReports.Add(Report);  // add only if not yet consumed
+End;
+
+Function TUSBPseudoHIDInterface.HasReport(ReportID: Byte): PHIDReport;
+Var List : TList;
+    I    : Integer;
+Begin
+  Result := Nil;
+  List := FIntrReports.LockList;
+  try
+    if List.Count <= 0 then
+      Exit;
+    For I := 0 to List.Count-1 do
+      if PHIDReport(List[I])^.ReportID = ReportID then
+        Exit(List[I]);
+  finally
+    FIntrReports.UnlockList;
+  End;
+End;
+
+Procedure TUSBPseudoHIDInterface.EatReport(Report:PHIDReport);
+Begin
+  FIntrReports.Remove(Report);
+End;
+
+Function TUSBPseudoHIDInterface.GetReport(ReportID: Byte): PHIDReport;
+Begin
+  raise Exception.Create('Not implemented!');
 End;
 
 { TLibUsbEndpoint }
