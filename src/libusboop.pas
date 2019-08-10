@@ -1153,8 +1153,8 @@ Begin
       {$RANGECHECKS OFF} //because of Array[0..0] of libusb_interface_descriptor
       EP:= @(FInterface^.endpoint^[E]);
       {$RANGECHECKS ON}
-      if (EP.bmAttributes and USB_ENDPOINT_TYPE_MASK = USB_ENDPOINT_TYPE_INTERRUPT) and
-         (EP.bEndpointAddress and USB_ENDPOINT_DIR_MASK <> 0) then
+      if (EP^.bmAttributes and LIBUSB_TRANSFER_TYPE_MASK = LIBUSB_TRANSFER_TYPE_INTERRUPT) and
+         (EP^.bEndpointAddress and LIBUSB_ENDPOINT_DIR_MASK <> 0) then
         Begin
           FIntrEndpoint := TLibUsbInterruptInEndpoint.Create(Self,@(FInterface^.Endpoint^[E]));
           break;
