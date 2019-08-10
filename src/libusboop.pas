@@ -181,7 +181,7 @@ Type
 
   TLibUsbTransfer = class;
 
-  { TUSBPseudoHIDInterface }
+  { TLibUsbPseudoHIDInterface }
 
   PHIDReport = ^THIDReport;
   THIDReport = record
@@ -191,16 +191,16 @@ Type
 
   TIntrReportFunc = Function(Report:PHIDReport) : Boolean of object;  // return true if report was consumed
 
-  TUSBPseudoHIDInterface = class(TUSBInterface)
+  TLibUsbPseudoHIDInterface = class(TLibUsbInterface)
   private
     FIntrReports  : TThreadList;
     FOnIntrReport : TIntrReportFunc;
   protected
-    FIntrEndpoint : TUSBInterruptInEndpoint;
+    FIntrEndpoint : TLibUsbInterruptInEndpoint;
     Function SetReport(ReportType, ReportID: Byte; const Buf; Length: LongInt): LongInt;
     Function GetReport(ReportType, ReportID: Byte; var Buf; Length: LongInt): LongInt;
   public
-    Constructor Create(ADevice:TUSBDevice;AIntf:PUSBInterfaceDescriptor=Nil);
+    Constructor Create(ADevice:TLibUsbDevice;AIntf:PUSBInterfaceDescriptor=Nil);
     Destructor  Destroy; override;
     Function SetOutputReport(ReportID:Byte;Const Buf;Length:LongInt) : LongInt;
     Function InterruptRead: Integer;
@@ -1138,9 +1138,9 @@ Begin
   ELibUsb.Check(libusb_attach_kernel_driver(FDevice.FHandle,FIntfNum),'AttachKernelDriver');
 End;
 
-{ TUSBPseudoHIDInterface }
+{ TLibUsbPseudoHIDInterface }
 
-Constructor TUSBPseudoHIDInterface.Create(ADevice:TUSBDevice;AIntf:PUSBInterfaceDescriptor);
+Constructor TLibUsbPseudoHIDInterface.Create(ADevice:TLibUsbDevice;AIntf:PUSBInterfaceDescriptor);
 Var E : Integer;
     EP   : USBEndpointDescriptor;
 Begin
@@ -1153,7 +1153,7 @@ Begin
       if (EP.bmAttributes and USB_ENDPOINT_TYPE_MASK = USB_ENDPOINT_TYPE_INTERRUPT) and
          (EP.bEndpointAddress and USB_ENDPOINT_DIR_MASK <> 0) then
         Begin
-          FIntrEndpoint := TUSBInterruptInEndpoint.Create(Self,@(FInterface^.Endpoint^[E]));
+          FIntrEndpoint := TLibUsbInterruptInEndpoint.Create(Self,@(FInterface^.Endpoint^[E]));
           break;
         End;
     End;
@@ -1165,7 +1165,7 @@ Begin
   FIntrReports  := TThreadList.Create;
 End;
 
-Destructor TUSBPseudoHIDInterface.Destroy;
+Destructor TLibUsbPseudoHIDInterface.Destroy;
 Var List : TList;
     I    : Integer;
 Begin
@@ -1185,7 +1185,7 @@ End;
  *
  * Sends Lenght+1 bytes as USB Control Message
  *)
-Function TUSBPseudoHIDInterface.SetReport(ReportType, ReportID: Byte; const Buf; Length: LongInt): LongInt;
+Function TLibUsbPseudoHIDInterface.SetReport(ReportType, ReportID: Byte; const Buf; Length: LongInt): LongInt;
 Var Data : PByteArray;
 Begin
   GetMem(Data,Length+1);
@@ -1207,7 +1207,7 @@ End;
  *
  * Receives at most Lenght bytes as USB Control Message
  *)
-Function TUSBPseudoHIDInterface.GetReport(ReportType, ReportID: Byte; var Buf; Length: LongInt): LongInt;
+Function TLibUsbPseudoHIDInterface.GetReport(ReportType, ReportID: Byte; var Buf; Length: LongInt): LongInt;
 Begin
   Result := FDevice.FControl.ControlMsg(
     USB_ENDPOINT_IN or USB_TYPE_CLASS or USB_RECIP_INTERFACE { bmRequestType },
@@ -1219,12 +1219,12 @@ Begin
     100);
 End;
 
-Function TUSBPseudoHIDInterface.SetOutputReport(ReportID: Byte; const Buf; Length: LongInt): LongInt;
+Function TLibUsbPseudoHIDInterface.SetOutputReport(ReportID: Byte; const Buf; Length: LongInt): LongInt;
 Begin
   Result := SetReport(HID_REPORT_TYPE_OUTPUT,ReportID,Buf,Length);
 End;
 
-Function TUSBPseudoHIDInterface.InterruptRead : Integer;
+Function TLibUsbPseudoHIDInterface.InterruptRead : Integer;
 Const BufSize = 64;
 Var Buf : Array[0..BufSize-1] of Byte;
     Report : PHIDReport;
@@ -1242,7 +1242,7 @@ Begin
     FIntrReports.Add(Report);  // add only if not yet consumed
 End;
 
-Function TUSBPseudoHIDInterface.HasReport(ReportID: Byte): PHIDReport;
+Function TLibUsbPseudoHIDInterface.HasReport(ReportID: Byte): PHIDReport;
 Var List : TList;
     I    : Integer;
 Begin
@@ -1259,12 +1259,12 @@ Begin
   End;
 End;
 
-Procedure TUSBPseudoHIDInterface.EatReport(Report:PHIDReport);
+Procedure TLibUsbPseudoHIDInterface.EatReport(Report:PHIDReport);
 Begin
   FIntrReports.Remove(Report);
 End;
 
-Function TUSBPseudoHIDInterface.GetReport(ReportID: Byte): PHIDReport;
+Function TLibUsbPseudoHIDInterface.GetReport(ReportID: Byte): PHIDReport;
 Begin
   raise Exception.Create('Not implemented!');
 End;
