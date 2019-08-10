@@ -19,7 +19,8 @@ Unit LibUsbOop;
 
 {$macro on}
 {$ifdef windows}
-  {$define extdecl:=stdcall}
+  //{$define extdecl:=stdcall}
+  {$define extdecl:=cdecl}
 {$else}
   {$define extdecl:=cdecl}
 {$endif}
@@ -990,14 +991,23 @@ End;
  *
  * @returns endpoint or Nil
  *)
-Function TLibUsbInterface.FindEndpoint(MatchFunc : TLibUsbEndpointMatchMethod) : Plibusb_endpoint_descriptor;
-Var IEP : Integer;
-Begin
-  For IEP := 0 to FInterface^.bNumEndpoints-1 do
-    if MatchFunc(@(FInterface^.endpoint^[IEP])) then
-      Exit(@(FInterface^.endpoint^[IEP]));
-  Result := Nil;
-End;
+function TLibUsbInterface.FindEndpoint(MatchFunc : TLibUsbEndpointMatchMethod) : Plibusb_endpoint_descriptor;
+var
+   IEP: Integer;
+   ed: Plibusb_endpoint_descriptor;
+begin
+     for IEP := 0 to FInterface^.bNumEndpoints-1
+     do
+       begin
+       {$RANGECHECKS OFF} //because of Array[0..0] of libusb_interface_descriptor
+       ed:= @(FInterface^.endpoint^[IEP]);
+       {$RANGECHECKS ON}
+       if MatchFunc(ed)
+       then
+           Exit(ed);
+       end;
+     Result := Nil;
+end;
 
 (**
  * Find endpoint according to MatchClass.Match

@@ -43,7 +43,8 @@ Unit LibUsb;
 
 {$macro on}
 {$ifdef windows}
-  {$define extdecl:=stdcall}
+  //{$define extdecl:=stdcall}
+  {$define extdecl:=cdecl}
 {$else}
   {$define extdecl:=cdecl}
 {$endif}
@@ -52,9 +53,13 @@ Interface
 
 Uses CTypes;
 
+{$ifdef windows}
+//{$LINKLIB c}
+{$LINKLIB libusb-1.0.dll}
+{$else}
 {$LINKLIB c}
 {$LINKLIB usb-1.0}
-
+{$endif}
 (*
   Automatically converted by H2Pas 1.0.0 from libusb.h
   The following command line parameters were used:
