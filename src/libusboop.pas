@@ -125,6 +125,7 @@ Type
   End;
 
   TLibUsbDeviceControlEndpoint = class;  // forward declaration
+  TLibUsbInterruptInEndpoint   = class;
 
   { TLibUsbDevice }
 
@@ -200,7 +201,7 @@ Type
     Function SetReport(ReportType, ReportID: Byte; const Buf; Length: LongInt): LongInt;
     Function GetReport(ReportType, ReportID: Byte; var Buf; Length: LongInt): LongInt;
   public
-    Constructor Create(ADevice:TLibUsbDevice;AIntf:PUSBInterfaceDescriptor=Nil);
+    Constructor Create(ADevice:TLibUsbDevice;AIntf:Plibusb_interface_descriptor=Nil);
     Destructor  Destroy; override;
     Function SetOutputReport(ReportID:Byte;Const Buf;Length:LongInt) : LongInt;
     Function InterruptRead: Integer;
@@ -1140,16 +1141,18 @@ End;
 
 { TLibUsbPseudoHIDInterface }
 
-Constructor TLibUsbPseudoHIDInterface.Create(ADevice:TLibUsbDevice;AIntf:PUSBInterfaceDescriptor);
+Constructor TLibUsbPseudoHIDInterface.Create(ADevice:TLibUsbDevice;AIntf:Plibusb_interface_descriptor);
 Var E : Integer;
-    EP   : USBEndpointDescriptor;
+    EP   : Plibusb_endpoint_descriptor;
 Begin
   inherited Create(ADevice,AIntf);
 
   { search Interrupt IN endpoint }
   For E := 0 to FInterface^.bNumEndpoints-1 do
     Begin
-      EP := FInterface^.Endpoint^[E];
+      {$RANGECHECKS OFF} //because of Array[0..0] of libusb_interface_descriptor
+      EP:= @(FInterface^.endpoint^[E]);
+      {$RANGECHECKS ON}
       if (EP.bmAttributes and USB_ENDPOINT_TYPE_MASK = USB_ENDPOINT_TYPE_INTERRUPT) and
          (EP.bEndpointAddress and USB_ENDPOINT_DIR_MASK <> 0) then
         Begin
@@ -1192,7 +1195,7 @@ Begin
   Data^[0] := ReportID;
   Move(Buf,Data^[1],Length);
   Result := FDevice.FControl.ControlMsg(
-    USB_ENDPOINT_OUT or USB_TYPE_CLASS or USB_RECIP_INTERFACE { bmRequestType },
+    LIBUSB_ENDPOINT_OUT or USB_TYPE_CLASS or LIBUSB_RECIPIENT_INTERFACE { bmRequestType },
     USB_REQ_HID_SET_REPORT {bRequest},
     ReportType shl 8 or ReportID,   { wValue }
     0,   { wIndex }
@@ -1210,7 +1213,7 @@ End;
 Function TLibUsbPseudoHIDInterface.GetReport(ReportType, ReportID: Byte; var Buf; Length: LongInt): LongInt;
 Begin
   Result := FDevice.FControl.ControlMsg(
-    USB_ENDPOINT_IN or USB_TYPE_CLASS or USB_RECIP_INTERFACE { bmRequestType },
+    LIBUSB_ENDPOINT_IN or USB_TYPE_CLASS or LIBUSB_RECIPIENT_INTERFACE { bmRequestType },
     USB_REQ_HID_GET_REPORT {bRequest},
     ReportType shl 8 or ReportID,   { wValue }
     0,   { wIndex }
