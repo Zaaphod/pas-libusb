@@ -182,12 +182,24 @@ Type
 
   TLibUsbTransfer = class;
 
-  { TLibUsbPseudoHIDInterface }
 
-  PHIDReport = ^THIDReport;
-  THIDReport = record
-    ReportID : Byte;
-    Data : Array[0..0] of Byte;
+  { TLibUsbPseudoHIDInterface }
+  Const
+    LIBUSB_REQUEST_HID_GET_REPORT   = $01;
+    LIBUSB_REQUEST_HID_GET_IDLE     = $02;
+    LIBUSB_REQUEST_HID_GET_PROTOCOL = $03;
+    LIBUSB_REQUEST_HID_SET_REPORT   = $09;
+    LIBUSB_REQUEST_HID_SET_IDLE     = $0A;
+    LIBUSB_REQUEST_HID_SET_PROTOCOL = $0B;
+    
+    LIBUSB_HID_REPORT_TYPE_INPUT    = $01;
+    LIBUSB_HID_REPORT_TYPE_OUTPUT   = $02;
+    LIBUSB_HID_REPORT_TYPE_FEATURE  = $03;
+  Type
+    PHIDReport = ^THIDReport;
+    THIDReport = record
+      ReportID : Byte;
+      Data : Array[0..0] of Byte;
   End;
 
   TIntrReportFunc = Function(Report:PHIDReport) : Boolean of object;  // return true if report was consumed
@@ -1196,7 +1208,7 @@ Begin
   Move(Buf,Data^[1],Length);
   Result := FDevice.FControl.ControlMsg(
     LIBUSB_ENDPOINT_OUT or LIBUSB_REQUEST_TYPE_CLASS or LIBUSB_RECIPIENT_INTERFACE { bmRequestType },
-    USB_REQ_HID_SET_REPORT {bRequest},
+    LIBUSB_REQUEST_HID_SET_REPORT {bRequest},
     ReportType shl 8 or ReportID,   { wValue }
     0,   { wIndex }
     Data^,
@@ -1214,7 +1226,7 @@ Function TLibUsbPseudoHIDInterface.GetReport(ReportType, ReportID: Byte; var Buf
 Begin
   Result := FDevice.FControl.ControlMsg(
     LIBUSB_ENDPOINT_IN or LIBUSB_REQUEST_TYPE_CLASS or LIBUSB_RECIPIENT_INTERFACE { bmRequestType },
-    USB_REQ_HID_GET_REPORT {bRequest},
+    LIBUSB_REQUEST_HID_GET_REPORT {bRequest},
     ReportType shl 8 or ReportID,   { wValue }
     0,   { wIndex }
     Buf,
@@ -1224,7 +1236,7 @@ End;
 
 Function TLibUsbPseudoHIDInterface.SetOutputReport(ReportID: Byte; const Buf; Length: LongInt): LongInt;
 Begin
-  Result := SetReport(HID_REPORT_TYPE_OUTPUT,ReportID,Buf,Length);
+  Result := SetReport(LIBUSB_HID_REPORT_TYPE_OUTPUT,ReportID,Buf,Length);
 End;
 
 Function TLibUsbPseudoHIDInterface.InterruptRead : Integer;
