@@ -1195,7 +1195,7 @@ Begin
   Data^[0] := ReportID;
   Move(Buf,Data^[1],Length);
   Result := FDevice.FControl.ControlMsg(
-    LIBUSB_ENDPOINT_OUT or USB_TYPE_CLASS or LIBUSB_RECIPIENT_INTERFACE { bmRequestType },
+    LIBUSB_ENDPOINT_OUT or LIBUSB_REQUEST_TYPE_CLASS or LIBUSB_RECIPIENT_INTERFACE { bmRequestType },
     USB_REQ_HID_SET_REPORT {bRequest},
     ReportType shl 8 or ReportID,   { wValue }
     0,   { wIndex }
@@ -1213,7 +1213,7 @@ End;
 Function TLibUsbPseudoHIDInterface.GetReport(ReportType, ReportID: Byte; var Buf; Length: LongInt): LongInt;
 Begin
   Result := FDevice.FControl.ControlMsg(
-    LIBUSB_ENDPOINT_IN or USB_TYPE_CLASS or LIBUSB_RECIPIENT_INTERFACE { bmRequestType },
+    LIBUSB_ENDPOINT_IN or LIBUSB_REQUEST_TYPE_CLASS or LIBUSB_RECIPIENT_INTERFACE { bmRequestType },
     USB_REQ_HID_GET_REPORT {bRequest},
     ReportType shl 8 or ReportID,   { wValue }
     0,   { wIndex }
