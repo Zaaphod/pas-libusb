@@ -184,22 +184,22 @@ Type
 
 
   { TLibUsbPseudoHIDInterface }
-  Const
-    LIBUSB_REQUEST_HID_GET_REPORT   = $01;
-    LIBUSB_REQUEST_HID_GET_IDLE     = $02;
-    LIBUSB_REQUEST_HID_GET_PROTOCOL = $03;
-    LIBUSB_REQUEST_HID_SET_REPORT   = $09;
-    LIBUSB_REQUEST_HID_SET_IDLE     = $0A;
-    LIBUSB_REQUEST_HID_SET_PROTOCOL = $0B;
-    
-    LIBUSB_HID_REPORT_TYPE_INPUT    = $01;
-    LIBUSB_HID_REPORT_TYPE_OUTPUT   = $02;
-    LIBUSB_HID_REPORT_TYPE_FEATURE  = $03;
-  Type
-    PHIDReport = ^THIDReport;
-    THIDReport = record
-      ReportID : Byte;
-      Data : Array[0..0] of Byte;
+Const
+  LIBUSB_REQUEST_HID_GET_REPORT   = $01;
+  LIBUSB_REQUEST_HID_GET_IDLE     = $02;
+  LIBUSB_REQUEST_HID_GET_PROTOCOL = $03;
+  LIBUSB_REQUEST_HID_SET_REPORT   = $09;
+  LIBUSB_REQUEST_HID_SET_IDLE     = $0A;
+  LIBUSB_REQUEST_HID_SET_PROTOCOL = $0B;
+  
+  LIBUSB_HID_REPORT_TYPE_INPUT    = $01;
+  LIBUSB_HID_REPORT_TYPE_OUTPUT   = $02;
+  LIBUSB_HID_REPORT_TYPE_FEATURE  = $03;
+Type
+  PHIDReport = ^THIDReport;
+  THIDReport = record
+    ReportID : Byte;
+    Data : Array[0..0] of Byte;
   End;
 
   TIntrReportFunc = Function(Report:PHIDReport) : Boolean of object;  // return true if report was consumed
