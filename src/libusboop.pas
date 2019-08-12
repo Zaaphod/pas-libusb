@@ -1033,23 +1033,18 @@ End;
  *
  * @returns endpoint or Nil
  *)
-function TLibUsbInterface.FindEndpoint(MatchFunc : TLibUsbEndpointMatchMethod) : Plibusb_endpoint_descriptor;
-var
-   IEP: Integer;
-   ed: Plibusb_endpoint_descriptor;
-begin
-     for IEP := 0 to FInterface^.bNumEndpoints-1
-     do
-       begin
-       {$RANGECHECKS OFF} //because of Array[0..0] of libusb_interface_descriptor
-       ed:= @(FInterface^.endpoint^[IEP]);
-       {$RANGECHECKS ON}
-       if MatchFunc(ed)
-       then
-           Exit(ed);
-       end;
-     Result := Nil;
-end;
+Function TLibUsbInterface.FindEndpoint(MatchFunc : TLibUsbEndpointMatchMethod) : Plibusb_endpoint_descriptor;
+Var IEP : Integer;
+    ED  : Plibusb_endpoint_descriptor;
+Begin
+  For IEP := 0 to FInterface^.bNumEndpoints-1 do
+    Begin
+      ED:= @(FInterface^.endpoint^[IEP]);
+      if MatchFunc(ED) then
+        Exit(ED);
+    End;
+  Result := Nil;
+End;
 
 (**
  * Find endpoint according to MatchClass.Match
