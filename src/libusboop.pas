@@ -1193,7 +1193,7 @@ End;
 (**
  * Set Report
  *
- * Sends Lenght+1 bytes as USB Control Message
+ * Sends Length+1 bytes as USB Control Message
  *)
 Function TLibUsbPseudoHIDInterface.SetReport(ReportType, ReportID: Byte; const Buf; Length: LongInt): LongInt;
 Var Data : PByteArray;
@@ -1215,7 +1215,7 @@ End;
 (**
  * Get Report
  *
- * Receives at most Lenght bytes as USB Control Message
+ * Receives at most Length bytes as USB Control Message
  *)
 Function TLibUsbPseudoHIDInterface.GetReport(ReportType, ReportID: Byte; var Buf; Length: LongInt): LongInt;
 Begin
