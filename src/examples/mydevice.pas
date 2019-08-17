@@ -127,17 +127,23 @@ Implementation
  *)
 Constructor TMyDevice.Create(AContext:TLibUsbContext;AMatchUnconfigured:TLibUsbDeviceMatchClass;AFirmwareFile:String;AMatchConfigured:TLibUsbDeviceMatchClass);
 Begin
+  Writeln('b');
   FFirmwareFile     := AFirmwareFile;
+   Writeln('c');
   { uses AMatchUnconfigured to find an unconfigured device, then Configure to
     do the configuration and finally AMatchConfigured to find the configured
     device. }
   inherited Create(AContext,AMatchUnconfigured,AMatchConfigured);
   SetConfiguration(ConfigUSBConfiguration);
+   Writeln('d');
 
   // create handlers for the endpoints (and the interface they belong to)
   FInterface       := TLibUsbInterface.Create(Self,FindInterface(ConfigUSBInterface,ConfigUSBAltInterface));
+   Writeln('e');
   FEPIn            := TLibUsbBulkInEndpoint. Create(FInterface,FInterface.FindEndpoint(EP_IN));
+   Writeln('f');
   FEPOut           := TLibUsbBulkOutEndpoint.Create(FInterface,FInterface.FindEndpoint(EP_OUT));
+   Writeln('g');
 End;
 
 (**

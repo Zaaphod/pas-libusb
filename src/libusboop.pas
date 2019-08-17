@@ -1037,11 +1037,16 @@ Function TLibUsbInterface.FindEndpoint(MatchFunc : TLibUsbEndpointMatchMethod) :
 Var IEP : Integer;
     ED  : Plibusb_endpoint_descriptor;
 Begin
+   writeln('H',FInterface^.bNumEndpoints);
   For IEP := 0 to FInterface^.bNumEndpoints-1 do
     Begin
+    Writeln('I');
       ED:= @(FInterface^.endpoint^[IEP]);
       if MatchFunc(ED) then
-        Exit(ED);
+        Begin
+           Writeln('J');
+           Exit(ED);
+        End;
     End;
   Result := Nil;
 End;

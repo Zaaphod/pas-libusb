@@ -83,10 +83,12 @@ Var DeviceDescriptor : libusb_device_descriptor;
 Begin
   DeviceDescriptor := FContext.GetDeviceDescriptor(dev);
   Result := ((DeviceDescriptor.idVendor = FVid) and (DeviceDescriptor.idProduct = FPid));
+  Writeln (Result ,'  ',inttohex(DeviceDescriptor.idVendor,4) ,'  ', inttohex(FVid,4) ,'  ', inttohex(DeviceDescriptor.idProduct,4) ,'  ', inttohex(FPid,4) );
 End;
 
 Constructor TLibUsbDeviceMatchVidPid.Create(AContext : TLibUsbContext; AVid, APid : Word);
 Begin
+  writeln('a',inttohex(AVid,4),inttohex(Apid,4));
   inherited Create;
   FContext := AContext;
   FVid     := AVid;
