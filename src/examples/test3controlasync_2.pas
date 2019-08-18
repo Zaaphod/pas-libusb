@@ -143,7 +143,7 @@ Begin
 
         EP0 := Device.Control;
         CT := TLibUsbControlTransfer.Create(EP0,LIBUSB_DT_DEVICE_SIZE);
-        CT.Setup($21,$09,$0306,0,WHB04_Packet,7,0);
+        CT.Setup($21,$09,$0306,0,WHB04_Packet,8,0);
         Writeln('CT.bmRequestType = $', inttohex(CT.bmRequestType,2));
         Writeln('CT.bRequest      = $', inttohex(CT.bRequest,2));
         Writeln('CT.wValue        = $', inttohex(CT.wValue,2));
