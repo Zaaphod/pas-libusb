@@ -60,7 +60,7 @@ Uses Classes,SysUtils,MyDevice,LibUsbOop,LibUsbUtil;
 const
      WHB04B_VID= $10CE;
      WHB04B_PID= $EB93;
-     
+
 Var Context   : TLibUsbContext;
     TheDevice : TMyDevice;
 
@@ -69,22 +69,22 @@ Begin
   Writeln('start');
   Context := TLibUsbContext.Create;
   Writeln('1');
-  try
+  //try
     Writeln('2');
     // connect to the device
     TheDevice := TMyDevice.Create(
       Context,
       TLibUsbDeviceMatchVidPid.Create(Context,MyDevice.USBVendEmpty,MyDevice.USBProdEmpty),
       '',
-      TLibUsbDeviceMatchVidPid.Create( Context, WHB04B_VID, WHB04B_PID);
+      TLibUsbDeviceMatchVidPid.Create( Context, WHB04B_VID, WHB04B_PID));
       Writeln('3');
-  except
-      Writeln('4');
-    on E : Exception do
-      Begin
-        WriteLn('Cousldn''t connect to device: ',E.Message);
-        Halt(1);
-      End;
+//  except
+//    on E : Exception do
+//      Begin
+//      Writeln('4');
+//        WriteLn('Cousldn''t connect to device: ',E.Message);
+//        Halt(1);
+//      End;
   End;
   WriteLn('Successfully connected to USB device ',IntToHex(MyDevice.USBVendConf,4),':',IntToHex(MyDevice.USBProdConf,4));
   WriteLn('Version:        ',TheDevice.GetVersion);
