@@ -43,8 +43,8 @@ Unit LibUsb;
 
 {$macro on}
 {$ifdef windows}
-  //{$define extdecl:=stdcall}
-  {$define extdecl:=cdecl}
+  {$define extdecl:=stdcall}
+  //{$define extdecl:=cdecl}
 {$else}
   {$define extdecl:=cdecl}
 {$endif}

@@ -19,8 +19,8 @@ Unit LibUsbOop;
 
 {$macro on}
 {$ifdef windows}
-  //{$define extdecl:=stdcall}
-  {$define extdecl:=cdecl}
+  {$define extdecl:=stdcall}
+  //{$define extdecl:=cdecl}
 {$else}
   {$define extdecl:=cdecl}
 {$endif}
@@ -191,7 +191,7 @@ Const
   LIBUSB_REQUEST_HID_SET_REPORT   = $09;
   LIBUSB_REQUEST_HID_SET_IDLE     = $0A;
   LIBUSB_REQUEST_HID_SET_PROTOCOL = $0B;
-  
+
   LIBUSB_HID_REPORT_TYPE_INPUT    = $01;
   LIBUSB_HID_REPORT_TYPE_OUTPUT   = $02;
   LIBUSB_HID_REPORT_TYPE_FEATURE  = $03;
@@ -464,12 +464,16 @@ Type
   End;
 Constructor TEndpointFuncMatcher.Create(AFunc:TLibUsbEndpointMatchFunc;AData:Pointer);
 Begin
+Writeln('P');
   FFunc := AFunc;
   FData := AData;
 End;
 Function TEndpointFuncMatcher.Match(Intf:Plibusb_endpoint_descriptor):Boolean;
 Begin
+Writeln('Q');
   Result := FFunc(Intf,FData);
+  Writeln('R');
+
 End;
 
 { TLibUsbContext }
@@ -1042,11 +1046,14 @@ Begin
     Begin
     Writeln('I');
       ED:= @(FInterface^.endpoint^[IEP]);
+       Writeln('I2');
       if MatchFunc(ED) then
         Begin
            Writeln('J');
            Exit(ED);
-        End;
+        End
+      else
+       Writeln('K');
     End;
   Result := Nil;
 End;
@@ -1063,7 +1070,9 @@ End;
  *)
 Function TLibUsbInterface.FindEndpoint(MatchClass : TLibUsbEndpointMatchClass;CFree : Boolean) : Plibusb_endpoint_descriptor;
 Begin
+  Writeln('L');
   Result := FindEndpoint(@MatchClass.Match);
+  Writeln('M');
   if CFree then
     MatchClass.Free;
 End;
@@ -1078,7 +1087,9 @@ End;
  *)
 Function TLibUsbInterface.FindEndpoint(MatchFunc : TLibUsbEndpointMatchFunc;Data : Pointer) : Plibusb_endpoint_descriptor;
 Begin
+  Writeln('N');
   Result := FindEndpoint(TEndpointFuncMatcher.Create(MatchFunc,Data));
+  Writeln('O1');
 End;
 
 // helper function for method below, this can't be a local function
@@ -1157,6 +1168,8 @@ Constructor TLibUsbPseudoHIDInterface.Create(ADevice:TLibUsbDevice;AIntf:Plibusb
 Var E : Integer;
     EP   : Plibusb_endpoint_descriptor;
 Begin
+      writeln('L');
+
   inherited Create(ADevice,AIntf);
 
   { search Interrupt IN endpoint }
