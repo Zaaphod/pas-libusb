@@ -6,7 +6,7 @@ Interface
 
 Uses
   Classes, SysUtils, TypInfo,
-  LibUSB, USB;
+  LibUSB,LibUsboop;
 
 {$PACKENUM 1}
 Type
@@ -63,9 +63,9 @@ Type
 
   TOnBarcodeFunc = Procedure(Barcode:String) of object;
 
-  TSNAPIDevice = class(TUSBDevice)
+  TSNAPIDevice = class(TLIBUSBDevice)
   private
-    FSNAPICommandInterface : TUSBPseudoHIDInterface;
+    FSNAPICommandInterface : TLIBUSBPseudoHIDInterface;
     FFragmentedBarcode : Array of TReportBarcode;
     FOnBarcode : TOnBarcodeFunc;
     Procedure SendACK(ReportID: Byte);
@@ -155,12 +155,12 @@ Const
 { TSNAPIDevice }
 
 Constructor TSNAPIDevice.Create(idVendor, idProduct: LongInt; AConfig, AInterface, AAltInterface: LongInt);
-Var Intf : PUSBInterfaceDescriptor;
+Var Intf : Plibusb_interface_descriptor;
 Begin
   inherited Create(idVendor,idProduct,AConfig);
   { create USB interface }
-  Intf := USBFindInterface(AInterface,AAltInterface,FDevice); { better: search for iInterface = "SNAPI Command Interface" }
-  FSNAPICommandInterface := TUSBPseudoHIDInterface.Create(Self,Intf);
+  Intf := TLibUsbDevice.FindInterface(AInterface,AAltInterface,FDevice); { better: search for iInterface = "SNAPI Command Interface" }
+  FSNAPICommandInterface := TLIBUSBPseudoHIDInterface.Create(Self,Intf);
   FSNAPICommandInterface.OnIntrReport := @IntrReport;
 End;
 
@@ -424,7 +424,7 @@ Begin
   Len := FSNAPICommandInterface.InterruptRead;
   // negative values are pre-filtered, i.e. ESysETIMEDOUT is returned as 0
   if Len < 0 then
-    raise USBException('TSNAPIDevice.Listen',Len);
+    raise Exception.Create('TSNAPIDevice.Listen',Len);
 End;
 
 End.
