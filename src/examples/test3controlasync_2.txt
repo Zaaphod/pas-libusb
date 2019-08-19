@@ -1,0 +1,33 @@
+Running "i:\programming\pas-libusb_test_dll\src\examples\test3controlasync_2.exe "
+CT.bmRequestType = $80
+CT.bRequest      = $06
+CT.wValue        = $100
+CT.wIndex        = $00
+CT.wLength       = $12
+CT.Timeout       = $3E8
+Submitting control transfer
+Finished Transfer, Data = 38, Status = 0, ActualLength = 18
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.00
+  bDeviceClass            0
+  bDeviceSubClass         0
+  bDeviceProtocol         0
+  bMaxPacketSize0        64
+  idVendor            $10CE
+  idProduct           $EB93
+  bcdDevice            1.00
+  iManufacturer           1
+  iProduct                0
+  iSerialNumber           0
+  bNumConfigurations      1
+Done.
+CT.bmRequestType = $21
+CT.bRequest      = $09
+CT.wValue        = $306
+CT.wIndex        = $00
+CT.wLength       = $08
+CT.Timeout       = $00
+Submitting control transfer
+USB Error: Submit: LIBUSB_ERROR_IO: LIBUSB_ERROR_IO
