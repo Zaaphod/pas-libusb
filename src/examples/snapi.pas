@@ -424,7 +424,7 @@ Begin
   Len := FSNAPICommandInterface.InterruptRead;
   // negative values are pre-filtered, i.e. ESysETIMEDOUT is returned as 0
   if Len < 0 then
-    raise Exception.Create('TSNAPIDevice.Listen',Len);
+    raise Exception.Create('TSNAPIDevice.Listen'+inttostr(Len));
 End;
 
 End.
